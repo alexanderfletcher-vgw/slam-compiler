@@ -1,0 +1,7 @@
+[package]
+name = "slam-compiler"
+version = "0.1.0"
+authors = ["Alexander Fletcher <alexander.fletcher@vgw.co>"]
+edition = "2018"
+
+[dependencies]
