@@ -5,3 +5,5 @@ authors = ["Alexander Fletcher <alexander.fletcher@vgw.co>"]
 edition = "2018"
 
 [dependencies]
+rand = "0.3.14"
+regex = "1"
