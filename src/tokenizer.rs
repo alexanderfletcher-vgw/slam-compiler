@@ -1,3 +1,6 @@
+extern crate regex;
+
+use regex::Regex;
 //tokens contain two parts, the lexem (identifier) and a value (which may be nil)
 #[derive(Debug)]
 pub struct Token {
@@ -61,7 +64,7 @@ fn determine_token_ident(lexeme: &String) -> TokenIdent {
     match lexeme.as_ref() {
         "print" => return TokenIdent::Print,
         lexeme if is_string_literal(lexeme) => return TokenIdent::StringLiteral,
-        lexeme if is_numeric(lexeme) => return TokenIdent::NumericLiteral,
+        lexeme if is_numeric_literal(lexeme) => return TokenIdent::NumericLiteral,
         "+" => return TokenIdent::Op,
         "=" => return TokenIdent::Op,
         "-" => return TokenIdent::Op,
@@ -71,40 +74,58 @@ fn determine_token_ident(lexeme: &String) -> TokenIdent {
 }
 
 fn convert_to_string_tokens(file: String) -> Vec<String> {
+    // push single empty string to end of file so that it loops over last element
+    let mut file = file;
+    file.push(' ');
     let chars = file.chars();
     let mut tokens = Vec::new();
     let mut current_token = String::new();
     println!("string to be tokenised \n vvvv \n {} \n ^^^^", file);
     for c in chars {
+        //super jank
+        if c == ' ' || is_valid_op(c.to_string().as_ref()) {
+            if is_numeric_literal(&current_token) || is_var(&current_token) {
+                tokens.push(current_token.clone());
+                current_token = String::from(c.to_string());
+            }
+        }
         if current_token != " " {
             current_token.push(c);
         } else {
             current_token = String::from(c.to_string());
         }
-        if is_valid_token(&current_token) {
+        if is_valid_non_numeric_token(&current_token) {
             tokens.push(current_token.clone());
             current_token = String::new();
         }
+
     }
 
     return tokens;
 }
 
-fn is_valid_token(lexeme: &String) -> bool {
+fn is_valid_op(lexeme: &str) -> bool {
+    match lexeme.as_ref() {
+        "+" => return true,
+        "=" => return true,
+        "-" => return true,
+        _ => return false,
+    }
+}
+
+fn is_valid_non_numeric_token(lexeme: &String) -> bool {
     //use static in future
     match lexeme.as_ref() {
         "print" => return true,
         lexeme if is_string_literal(lexeme) => return true,
-        lexeme if is_numeric(lexeme) => return true,
-        "+" => return true,
-        "=" => return true,
-        "-" => return true,
+        lexeme if is_valid_op(lexeme) => return true,
         "\n" => return true,
         _ => return false,
     }
 }
 
-fn is_numeric(lexeme: &str) -> bool {
+//includes whitespace
+fn is_numeric_literal(lexeme: &str) -> bool {
     let nope = lexeme.parse::<i32>();
     if nope.is_err() {
         return false;
@@ -117,4 +138,9 @@ fn is_string_literal(lexeme: &str) -> bool {
         return true;
     }
     return false;
+}
+
+fn is_var(lexeme: &str) -> bool {
+    let re = Regex::new(r"^[a-zA-Z]+[a-zA-Z0-9]*$").unwrap();
+    return re.is_match(lexeme);
 }

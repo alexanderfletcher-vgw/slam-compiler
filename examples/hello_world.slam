@@ -1,2 +1,2 @@
-print "im a compiler"
-5 +5 - 1
+test = "hello world"
+print test
